@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#141e37">
+<title>Sweet Box - תפסו את הקינוחים</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  width:100%;height:100%;overflow:hidden;background:#141e37;
+  font-family:'Segoe UI',Tahoma,Arial,sans-serif;
+  touch-action:none;user-select:none;-webkit-user-select:none;
+  -webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;direction:rtl;
+}
+canvas{display:block;touch-action:none}
+#screens{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.screen{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  pointer-events:auto;transition:opacity 0.4s;padding:20px;
+}
+.screen.hidden{opacity:0;pointer-events:none}
+#startScreen{background:linear-gradient(180deg,#1a2744 0%,#0d1525 100%)}
+.logo-title{
+  font-size:clamp(44px,11vw,76px);font-weight:900;color:#fff;
+  text-shadow:0 0 30px rgba(163,199,231,0.5),0 4px 8px rgba(0,0,0,0.3);
+  margin-bottom:6px;letter-spacing:2px;direction:ltr;
+}
+.logo-sub{font-size:clamp(13px,3.2vw,20px);color:#a3c7e7;letter-spacing:4px;margin-bottom:35px;direction:ltr}
+.game-tagline{font-size:clamp(24px,6vw,38px);color:#dabe82;margin-bottom:8px;font-weight:700}
+.game-tagline2{font-size:clamp(18px,4.5vw,26px);color:#fff;margin-bottom:45px;font-weight:500;opacity:0.8}
+.btn{
+  padding:16px 55px;font-size:clamp(22px,5.5vw,30px);font-weight:800;
+  border:none;border-radius:50px;cursor:pointer;transition:all 0.15s;
+  letter-spacing:1px;-webkit-tap-highlight-color:transparent;
+}
+.btn:active{transform:scale(0.93)}
+.btn-play{background:linear-gradient(135deg,#dabe82,#c4a55a);color:#1a2744;box-shadow:0 6px 25px rgba(218,190,130,0.4)}
+.instructions{margin-top:28px;color:#7a9bc0;font-size:clamp(14px,3.2vw,18px);text-align:center;line-height:2}
+#gameOverScreen{background:rgba(13,21,37,0.93);backdrop-filter:blur(8px)}
+.go-title{font-size:clamp(32px,8vw,52px);color:#dabe82;font-weight:900;margin-bottom:5px}
+.go-subtitle{font-size:clamp(18px,4.5vw,26px);color:#a3c7e7;margin-bottom:20px}
+.score-display{font-size:clamp(64px,16vw,110px);font-weight:900;color:#fff;text-shadow:0 0 40px rgba(218,190,130,0.5);margin-bottom:3px;direction:ltr}
+.score-label{font-size:clamp(16px,3.8vw,22px);color:#7a9bc0;margin-bottom:18px}
+.coupon-box{
+  background:linear-gradient(135deg,rgba(218,190,130,0.12),rgba(218,190,130,0.04));
+  border:2px solid #dabe82;border-radius:20px;padding:18px 25px;
+  margin:12px 15px;text-align:center;max-width:380px;width:90%;
+}
+.coupon-title{font-size:clamp(16px,3.8vw,22px);color:#dabe82;font-weight:700;margin-bottom:8px}
+.coupon-code{font-size:clamp(30px,7.5vw,46px);font-weight:900;color:#fff;letter-spacing:4px;margin-bottom:8px;direction:ltr}
+.coupon-detail{font-size:clamp(13px,3vw,16px);color:#a3c7e7;line-height:1.7}
+.go-buttons{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;justify-content:center}
+.btn-replay{background:linear-gradient(135deg,#dabe82,#c4a55a);color:#1a2744;box-shadow:0 4px 15px rgba(218,190,130,0.3);padding:13px 26px;font-size:clamp(16px,3.8vw,20px)}
+.brand-footer{margin-top:22px;text-align:center}
+.brand-footer a{color:#dabe82;text-decoration:none;font-size:clamp(16px,4vw,22px);font-weight:700;direction:ltr}
+.brand-footer .branches{color:#7a9bc0;font-size:clamp(12px,2.8vw,15px);margin-top:6px}
+.name-input-wrap{margin-bottom:20px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.name-label{color:#a3c7e7;font-size:clamp(14px,3.2vw,18px)}
+.name-input{
+  background:rgba(255,255,255,0.08);border:2px solid #dabe82;border-radius:30px;
+  padding:12px 24px;font-size:clamp(18px,4.5vw,24px);color:#fff;text-align:center;
+  font-weight:700;width:70%;max-width:280px;outline:none;direction:rtl;
+  font-family:'Segoe UI',Tahoma,Arial,sans-serif;
+}
+.name-input::placeholder{color:rgba(163,199,231,0.5);font-weight:400}
+.name-input:focus{border-color:#fff;background:rgba(255,255,255,0.12)}
+.leaderboard{
+  margin-top:15px;width:90%;max-width:340px;max-height:260px;overflow-y:auto;
+}
+.lb-title{color:#dabe82;font-size:clamp(16px,3.8vw,20px);font-weight:700;text-align:center;margin-bottom:10px}
+.lb-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 14px;border-radius:10px;margin-bottom:4px;font-size:clamp(13px,3vw,16px);
+}
+.lb-row:nth-child(odd){background:rgba(163,199,231,0.06)}
+.lb-row:nth-child(even){background:rgba(163,199,231,0.03)}
+.lb-rank{color:#dabe82;font-weight:800;min-width:28px;direction:ltr}
+.lb-name{color:#fff;flex:1;text-align:right;margin:0 10px}
+.lb-score{color:#a3c7e7;font-weight:700;direction:ltr;min-width:50px;text-align:left}
+.lb-row.highlight{background:rgba(218,190,130,0.18);border:1px solid rgba(218,190,130,0.3)}
+.lb-empty{color:#7a9bc0;text-align:center;font-size:clamp(13px,3vw,16px);padding:20px 0}
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<div id="screens">
+  <div id="startScreen" class="screen">
+    <div class="logo-title">Sweet Box</div>
+    <div class="logo-sub">AMERICAN BAKESHOP</div>
+    <div class="game-tagline">תפסו את הקינוחים!</div>
+    <div class="game-tagline2">🍪 🧁 🍩</div>
+    <div class="name-input-wrap">
+      <input type="text" id="playerName" class="name-input" placeholder="הכניסו שם" maxlength="20" autocomplete="off">
+    </div>
+    <button class="btn btn-play" onclick="startGame()">התחילו לשחק</button>
+    <div class="instructions">
+      הזיזו את הקופסא עם האצבע או העכבר<br>
+      תפסו כמה שיותר קינוחים<br>
+      שלוש פסילות וזה נגמר<br>
+      ככל שתתפסו יותר ההנחה גדולה יותר<br>
+      שרדו 15 דקות רצוף וקבלו מארז חינם 🎁
+    </div>
+  </div>
+  <div id="gameOverScreen" class="screen hidden">
+    <div class="go-title">נגמר!</div>
+    <div class="go-subtitle" id="goSubtitle">כל הכבוד</div>
+    <div class="score-display" id="finalScore">0</div>
+    <div class="score-label">נקודות</div>
+    <div class="coupon-box" id="couponBox">
+      <div class="coupon-title" id="couponTitle"></div>
+      <div class="coupon-code" id="couponCode"></div>
+      <div class="coupon-detail" id="couponDetail"></div>
+    </div>
+    <div class="go-buttons">
+      <button class="btn btn-replay" onclick="restartGame()">שחקו שוב 🔄</button>
+    </div>
+    <div class="leaderboard" id="endLeaderboard"></div>
+    <div class="brand-footer">
+      <a href="https://www.sweetbox.co.il" target="_blank">www.sweetbox.co.il</a>
+      <div class="branches">בקרו אותנו בסניפים: לוינסקי או ביג גלילות</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// OPTIMIZED GAME ENGINE
+// - Pre-rendered sprites on offscreen canvases (no emoji fillText each frame)
+// - Object pooling (no GC pauses from splice/push)
+// - No shadowBlur during gameplay (huge perf killer)
+// - alpha:false on main canvas
+// - Rounded pixel coordinates
+// - Minimal save/restore calls
+// ═══════════════════════════════════════════════════════════════════
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d', { alpha: false });
+
+let W, H, scale;
+function resizeCanvas() {
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W;
+  canvas.height = H;
+  scale = Math.min(W / 400, H / 800);
+  buildSprites(); // rebuild sprites at correct size
+  initStars();
+  // rebuild box sprite too
+  buildBoxSprite();
+}
+
+// ─── PRE-RENDERED SPRITES ───────────────────────────────────────
+// Render each emoji ONCE to an offscreen canvas, then use drawImage
+const spriteCanvases = {};
+const EMOJI_LIST = ['🍪','🧁','🍩','⭐'];
+let SPRITE_SIZE = 56;
+
+function buildSprites() {
+  SPRITE_SIZE = Math.max(40, Math.round(52 * Math.max(scale, 0.7)));
+  const pad = 10; // extra padding for glow
+  const fullSize = SPRITE_SIZE + pad * 2;
+
+  EMOJI_LIST.forEach(emoji => {
+    const c = document.createElement('canvas');
+    c.width = fullSize;
+    c.height = fullSize;
+    const cx = c.getContext('2d');
+    cx.font = `${SPRITE_SIZE}px serif`;
+    cx.textAlign = 'center';
+    cx.textBaseline = 'middle';
+    cx.fillText(emoji, fullSize / 2, fullSize / 2);
+    spriteCanvases[emoji] = c;
+  });
+
+  // Hearts
+  ['❤️','🖤'].forEach(emoji => {
+    const c = document.createElement('canvas');
+    c.width = 36; c.height = 36;
+    const cx = c.getContext('2d');
+    cx.font = '24px serif';
+    cx.textAlign = 'center';
+    cx.textBaseline = 'middle';
+    cx.fillText(emoji, 18, 18);
+    spriteCanvases[emoji] = c;
+  });
+}
+
+// ─── PRE-RENDERED BOX SPRITE ────────────────────────────────────
+let boxSpriteCanvas = null;
+let boxSpriteW = 0, boxSpriteH = 0;
+
+function buildBoxSprite() {
+  boxSpriteW = Math.max(75, Math.round(90 * scale));
+  boxSpriteH = Math.max(60, Math.round(75 * scale));
+  const pad = 6;
+  const cw = boxSpriteW + pad * 2;
+  const ch = boxSpriteH + pad * 2;
+  const c = document.createElement('canvas');
+  c.width = cw; c.height = ch;
+  const bx = pad;
+  const by = pad;
+  const w = boxSpriteW;
+  const h = boxSpriteH;
+  const d = c.getContext('2d');
+
+  // shadow
+  d.fillStyle = 'rgba(0,0,0,0.25)';
+  drawRR(d, bx+3, by+3, w, h, 8); d.fill();
+  // body
+  const bodyGrad = d.createLinearGradient(bx, by, bx, by+h);
+  bodyGrad.addColorStop(0, '#b8d8f0');
+  bodyGrad.addColorStop(1, '#8bbde0');
+  d.fillStyle = bodyGrad;
+  drawRR(d, bx, by, w, h, 8); d.fill();
+  d.strokeStyle = '#6496c8'; d.lineWidth = 2;
+  drawRR(d, bx, by, w, h, 8); d.stroke();
+  // lid
+  const lidH = h * 0.22;
+  const lidGrad = d.createLinearGradient(bx, by, bx, by+lidH);
+  lidGrad.addColorStop(0, '#c8e4f6');
+  lidGrad.addColorStop(1, '#a3c7e7');
+  d.fillStyle = lidGrad;
+  drawRR(d, bx-2, by-2, w+4, lidH+2, 5); d.fill();
+  // scallops
+  const nb = 6; const bW = (w+4)/nb;
+  d.fillStyle = '#c8e4f6';
+  for (let i = 0; i < nb; i++) {
+    d.beginPath();
+    d.arc(bx - 2 + bW * (i + 0.5), by - 2, bW * 0.36, 0, Math.PI * 2);
+    d.fill();
+  }
+  // bow/ribbon on TOP only (no vertical ribbon through the box)
+  const bowX = bx + w/2;
+  const bowY = by + lidH/2 - 1;
+  // short horizontal ribbon strip on lid
+  d.fillStyle = '#fff';
+  d.fillRect(bowX - w*0.3, bowY - 2, w*0.6, 4);
+  // bow loops
+  d.beginPath(); d.ellipse(bowX - 12, bowY - 1, 10, 7, -0.2, 0, Math.PI*2); d.fill();
+  d.beginPath(); d.ellipse(bowX + 12, bowY - 1, 10, 7, 0.2, 0, Math.PI*2); d.fill();
+  // bow center knot
+  d.fillStyle = '#e8e8e8';
+  d.beginPath(); d.arc(bowX, bowY, 4, 0, Math.PI*2); d.fill();
+  // ribbon tails hanging down slightly
+  d.fillStyle = '#fff';
+  d.beginPath();
+  d.moveTo(bowX - 3, bowY + 3);
+  d.lineTo(bowX - 8, bowY + 12);
+  d.lineTo(bowX - 1, bowY + 8);
+  d.fill();
+  d.beginPath();
+  d.moveTo(bowX + 3, bowY + 3);
+  d.lineTo(bowX + 8, bowY + 12);
+  d.lineTo(bowX + 1, bowY + 8);
+  d.fill();
+  // "Sweet Box" logo text on front
+  d.fillStyle = '#fff';
+  d.font = `bold ${Math.round(h*0.17)}px serif`;
+  d.textAlign = 'center'; d.textBaseline = 'middle';
+  d.fillText('Sweet Box', bx + w/2, by + lidH + (h - lidH) * 0.45);
+
+  boxSpriteCanvas = c;
+}
+
+function drawRR(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+
+// ─── STARS (static, drawn once to offscreen) ────────────────────
+let starsCanvas = null;
+function initStars() {
+  starsCanvas = document.createElement('canvas');
+  starsCanvas.width = W; starsCanvas.height = H;
+  const sc = starsCanvas.getContext('2d');
+  for (let i = 0; i < 50; i++) {
+    const alpha = 0.15 + Math.random() * 0.35;
+    sc.fillStyle = `rgba(255,255,255,${alpha})`;
+    sc.beginPath();
+    sc.arc(Math.random()*W, Math.random()*H*0.6, Math.random()*2+0.5, 0, Math.PI*2);
+    sc.fill();
+  }
+}
+
+// ─── OBJECT POOL ────────────────────────────────────────────────
+const POOL_SIZE = 40;
+const dessertPool = [];
+for (let i = 0; i < POOL_SIZE; i++) {
+  dessertPool.push({ active: false, x:0, y:0, speed:0, rotation:0, rotSpeed:0, typeIdx:0 });
+}
+
+const PARTICLE_POOL = 150;
+const particlePool = [];
+for (let i = 0; i < PARTICLE_POOL; i++) {
+  particlePool.push({ active:false, x:0, y:0, vx:0, vy:0, life:0, decay:0, size:0, r:0, g:0, b:0 });
+}
+
+const FLOAT_POOL = 20;
+const floatPool = [];
+for (let i = 0; i < FLOAT_POOL; i++) {
+  floatPool.push({ active:false, x:0, y:0, text:'', r:0, g:0, b:0, size:24, life:0, vy:0 });
+}
+
+// ─── DESSERT TYPES ──────────────────────────────────────────────
+const DESSERT_TYPES = [
+  { name:'עוגיית מונסטר', emoji:'🍪', points:10, r:194, g:150, b:100 },
+  { name:'קאפקייק',       emoji:'🧁', points:15, r:255, g:150, b:180 },
+  { name:'סינבון',         emoji:'🍩', points:20, r:210, g:170, b:110 },
+  { name:'בונוס',          emoji:'⭐', points:50, r:218, g:190, b:130 }
+];
+
+// ─── GAME STATE ─────────────────────────────────────────────────
+let gameState = 'menu';
+let score=0, lives=3, level=1, combo=0, maxCombo=0;
+let gameTime=0, lastTime=0;
+let boxX=0, targetBoxX=0;
+let speedMultiplier=1, spawnTimer=0, spawnInterval=0.85;
+let touchActive=false, shakeTimer=0;
+let totalCaught=0, totalMissed=0;
+const MAX_LIVES=3;
+let playerName='';
+
+// ─── LEADERBOARD (localStorage) ─────────────────────────────
+const LB_KEY = 'sweetbox_leaderboard';
+function getLeaderboard() {
+  try { return JSON.parse(localStorage.getItem(LB_KEY)) || []; } catch(e) { return []; }
+}
+function saveToLeaderboard(name, sc) {
+  const lb = getLeaderboard();
+  lb.push({ name: name || 'אנונימי', score: sc, date: Date.now() });
+  lb.sort((a,b) => b.score - a.score);
+  if (lb.length > 10) lb.length = 10;
+  try { localStorage.setItem(LB_KEY, JSON.stringify(lb)); } catch(e) {}
+  return lb;
+}
+function renderLeaderboard(containerId, highlightScore) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const lb = getLeaderboard();
+  if (lb.length === 0) {
+    el.innerHTML = '<div class="lb-title">🏆 טבלת שיאים</div><div class="lb-empty">עדיין אין שיאים, היו הראשונים!</div>';
+    return;
+  }
+  let html = '<div class="lb-title">🏆 טבלת שיאים</div>';
+  const medals = ['🥇','🥈','🥉'];
+  lb.forEach((entry, i) => {
+    const isHL = highlightScore !== undefined && entry.score === highlightScore && entry.name === playerName;
+    html += `<div class="lb-row${isHL ? ' highlight' : ''}">
+      <span class="lb-rank">${medals[i] || (i+1)}</span>
+      <span class="lb-name">${entry.name}</span>
+      <span class="lb-score">${entry.score}</span>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+// ─── SPAWN / RECYCLE ────────────────────────────────────────────
+function spawnDessert() {
+  const obj = dessertPool.find(o => !o.active);
+  if (!obj) return; // pool full
+  const typeIdx = Math.random() < 0.08 ? 3 : Math.floor(Math.random()*3);
+  const margin = 50;
+  obj.active = true;
+  obj.x = margin + Math.random() * (W - margin*2);
+  obj.y = -SPRITE_SIZE;
+  const effLvl = Math.min(level, 15);
+  obj.speed = (140 + Math.random()*100 + effLvl*25) * Math.max(scale,0.6) * 0.5;
+  obj.rotation = 0;
+  obj.rotSpeed = (Math.random()-0.5)*2.5;
+  obj.typeIdx = typeIdx;
+}
+
+function spawnCatchParticles(x, y, type) {
+  for (let i = 0; i < 8; i++) {
+    const p = particlePool.find(o => !o.active);
+    if (!p) break;
+    const angle = (Math.PI*2*i)/8 + Math.random()*0.4;
+    const speed = 70 + Math.random()*100;
+    p.active=true; p.x=x; p.y=y;
+    p.vx=Math.cos(angle)*speed; p.vy=Math.sin(angle)*speed-40;
+    p.life=1; p.decay=1.8+Math.random()*0.5; p.size=2.5+Math.random()*3;
+    p.r=type.r; p.g=type.g; p.b=type.b;
+  }
+}
+
+function spawnMissParticles(x, y) {
+  for (let i = 0; i < 5; i++) {
+    const p = particlePool.find(o => !o.active);
+    if (!p) break;
+    p.active=true; p.x=x+(Math.random()-0.5)*40; p.y=y;
+    p.vx=(Math.random()-0.5)*60; p.vy=-40-Math.random()*30;
+    p.life=1; p.decay=2.2; p.size=2+Math.random()*2;
+    p.r=255; p.g=60; p.b=60;
+  }
+}
+
+function spawnFloat(x, y, text, r, g, b, size) {
+  const f = floatPool.find(o => !o.active);
+  if (!f) return;
+  f.active=true; f.x=x; f.y=y; f.text=text;
+  f.r=r; f.g=g; f.b=b; f.size=size||26; f.life=1; f.vy=-100;
+}
+
+// ─── UPDATE ─────────────────────────────────────────────────────
+function updateGame(dt) {
+  if (gameState !== 'playing') return;
+
+  gameTime += dt;
+  if (shakeTimer > 0) shakeTimer -= dt;
+
+  level = 1 + Math.floor(gameTime / 8);
+  // cap difficulty at level 15 (~2 min) - hard but survivable
+  const effectiveLevel = Math.min(level, 15);
+  speedMultiplier = 1 + effectiveLevel * 0.18;
+  spawnInterval = Math.max(0.28, 0.8 - effectiveLevel * 0.04);
+
+  // bonus life every 45 seconds, up to 5 max
+  const bonusLivesEarned = Math.floor(gameTime / 45);
+  if (bonusLivesEarned > 0 && lives > 0) {
+    const prevBonusLives = Math.floor((gameTime - dt) / 45);
+    if (bonusLivesEarned > prevBonusLives && lives < 5) {
+      lives = Math.min(lives + 1, 5);
+      spawnFloat(W/2, H/2 - 60, 'חיים בונוס! ❤️', 255, 80, 80, 32);
+    }
+  }
+
+  spawnTimer += dt;
+  if (spawnTimer >= spawnInterval) {
+    spawnTimer = 0;
+    spawnDessert();
+    if (effectiveLevel >= 2 && Math.random() < 0.3) spawnDessert();
+    if (effectiveLevel >= 4 && Math.random() < 0.35) spawnDessert();
+    if (effectiveLevel >= 7 && Math.random() < 0.25) spawnDessert();
+  }
+
+  // box movement - instant follow
+  const boxSpeed = W * 4;
+  const diff = targetBoxX - boxX;
+  if (Math.abs(diff) > 1) {
+    boxX += Math.sign(diff) * Math.min(Math.abs(diff), boxSpeed * dt);
+  }
+  boxX = Math.max(boxSpriteW/2, Math.min(W - boxSpriteW/2, boxX));
+
+  const catchY = H - 130 * Math.max(scale, 0.65);
+
+  // desserts
+  for (let i = 0; i < POOL_SIZE; i++) {
+    const d = dessertPool[i];
+    if (!d.active) continue;
+
+    d.y += d.speed * speedMultiplier * dt;
+    d.rotation += d.rotSpeed * dt;
+
+    // catch check
+    const dx = Math.abs(d.x - boxX);
+    const dy = d.y - catchY;
+    if (dy > -boxSpriteH*0.6 && dy < boxSpriteH*0.5 && dx < boxSpriteW*0.75) {
+      const type = DESSERT_TYPES[d.typeIdx];
+      const mult = 1 + Math.floor(combo/5)*0.5;
+      const points = Math.round(type.points * mult);
+      score += points;
+      combo++; maxCombo = Math.max(maxCombo, combo);
+      totalCaught++;
+      spawnCatchParticles(d.x, d.y, type);
+      let txt = `${points}+`;
+      if (combo >= 5) txt = `${mult}x ${points}+`;
+      spawnFloat(d.x, d.y-30, txt, 218,190,130, 26);
+      if (combo===5) spawnFloat(d.x, d.y-65, 'קומבו 🔥', 255,100,0, 28);
+      if (combo===10) spawnFloat(d.x, d.y-65, 'מגה ⚡', 255,0,255, 32);
+      if (combo===20) spawnFloat(d.x, d.y-65, 'אלוף 👑', 255,215,0, 36);
+      d.active = false;
+      continue;
+    }
+
+    // miss
+    if (d.y > H + 40) {
+      combo = 0; lives--; totalMissed++;
+      shakeTimer = 0.25;
+      spawnMissParticles(d.x, H-30);
+      spawnFloat(d.x, H-70, '💔', 255,60,60, 30);
+      d.active = false;
+      if (lives <= 0) { endGame(); return; }
+    }
+  }
+
+  // particles
+  for (let i = 0; i < PARTICLE_POOL; i++) {
+    const p = particlePool[i];
+    if (!p.active) continue;
+    p.x += p.vx*dt; p.y += p.vy*dt;
+    p.vy += 180*dt;
+    p.life -= p.decay*dt;
+    if (p.life <= 0) p.active = false;
+  }
+
+  // floats
+  for (let i = 0; i < FLOAT_POOL; i++) {
+    const f = floatPool[i];
+    if (!f.active) continue;
+    f.y += f.vy*dt;
+    f.life -= 1.6*dt;
+    if (f.life <= 0) f.active = false;
+  }
+}
+
+// ─── RENDER ─────────────────────────────────────────────────────
+function render(timestamp) {
+  const dt = lastTime ? Math.min((timestamp - lastTime) / 1000, 0.05) : 0.016;
+  lastTime = timestamp;
+  updateGame(dt);
+
+  // shake
+  ctx.setTransform(1,0,0,1,0,0);
+  if (shakeTimer > 0) {
+    const i = shakeTimer * 20;
+    ctx.setTransform(1,0,0,1,(Math.random()-0.5)*i|0,(Math.random()-0.5)*i|0);
+  }
+
+  // bg
+  ctx.fillStyle = '#141e37';
+  ctx.fillRect(0, 0, W, H);
+
+  // stars (pre-rendered, single drawImage)
+  if (starsCanvas) ctx.drawImage(starsCanvas, 0, 0);
+
+  // subtle grid - only vertical (cheaper)
+  ctx.strokeStyle = 'rgba(163,199,231,0.04)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 90) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+
+  if (gameState === 'playing') {
+    const catchY = H - 130 * Math.max(scale, 0.65);
+
+    // platform line
+    ctx.strokeStyle = 'rgba(163,199,231,0.12)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(15, catchY + boxSpriteH/2 + 10);
+    ctx.lineTo(W-15, catchY + boxSpriteH/2 + 10); ctx.stroke();
+
+    // ── DESSERTS (pre-rendered sprites, no shadows, no save/restore for non-rotated) ──
+    ctx.globalAlpha = 1;
+    const pad = 10;
+    const fullSize = SPRITE_SIZE + pad*2;
+    for (let i = 0; i < POOL_SIZE; i++) {
+      const d = dessertPool[i];
+      if (!d.active) continue;
+      const sprite = spriteCanvases[DESSERT_TYPES[d.typeIdx].emoji];
+      if (!sprite) continue;
+      const px = (d.x - fullSize/2)|0;
+      const py = (d.y - fullSize/2)|0;
+
+      // only use rotation if significant
+      if (Math.abs(d.rotation) > 0.05) {
+        ctx.save();
+        ctx.translate((d.x)|0, (d.y)|0);
+        ctx.rotate(d.rotation);
+        ctx.drawImage(sprite, (-fullSize/2)|0, (-fullSize/2)|0);
+        ctx.restore();
+      } else {
+        ctx.drawImage(sprite, px, py);
+      }
+    }
+
+    // ── PARTICLES (simple circles, no shadows) ──
+    for (let i = 0; i < PARTICLE_POOL; i++) {
+      const p = particlePool[i];
+      if (!p.active) continue;
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = `rgb(${p.r},${p.g},${p.b})`;
+      ctx.beginPath(); ctx.arc(p.x|0, p.y|0, p.size, 0, 6.283); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // ── FLOATING TEXTS ──
+    for (let i = 0; i < FLOAT_POOL; i++) {
+      const f = floatPool[i];
+      if (!f.active) continue;
+      ctx.globalAlpha = Math.max(0, f.life);
+      ctx.fillStyle = `rgb(${f.r},${f.g},${f.b})`;
+      ctx.font = `bold ${f.size}px sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(f.text, f.x|0, f.y|0);
+    }
+    ctx.globalAlpha = 1;
+
+    // ── BOX (pre-rendered sprite) ──
+    if (boxSpriteCanvas) {
+      ctx.drawImage(boxSpriteCanvas,
+        (boxX - boxSpriteCanvas.width/2)|0,
+        (catchY - boxSpriteCanvas.height/2)|0);
+    }
+
+    // ── HUD ──
+    ctx.fillStyle = 'rgba(20,30,55,0.85)';
+    ctx.fillRect(0, 0, W, 80);
+
+    // score - left
+    ctx.fillStyle = '#dabe82';
+    const hudFontBig = Math.max(18, Math.round(24 * scale))|0;
+    const hudFontSm = Math.max(11, Math.round(12 * scale))|0;
+    ctx.font = `bold ${hudFontBig}px sans-serif`;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText(`${score}`, 16, 14);
+    ctx.fillStyle = '#7a9bc0';
+    ctx.font = `${hudFontSm}px sans-serif`;
+    ctx.fillText('ניקוד', 16, 42);
+
+    // hearts - center (use pre-rendered sprites, up to 5)
+    const heartSize = 28;
+    const maxH = Math.max(MAX_LIVES, lives);
+    const heartsW = maxH * heartSize;
+    const hx0 = (W/2 - heartsW/2)|0;
+    for (let i = 0; i < maxH; i++) {
+      const hSprite = spriteCanvases[i < lives ? '❤️' : '🖤'];
+      if (hSprite) ctx.drawImage(hSprite, hx0 + i*heartSize, 12);
+    }
+
+    // timer - right top
+    const mins = Math.floor(gameTime / 60);
+    const secs = Math.floor(gameTime % 60);
+    const timeStr = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${hudFontBig}px sans-serif`;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+    ctx.fillText(timeStr, W-16, 14);
+    ctx.fillStyle = '#7a9bc0';
+    ctx.font = `${hudFontSm}px sans-serif`;
+    ctx.fillText('זמן', W-16, 42);
+
+    // combo
+    if (combo >= 3) {
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ff9600';
+      ctx.font = `bold ${Math.min(24, 15+combo)}px sans-serif`;
+      ctx.fillText(`${combo}x קומבו 🔥`, W/2, 62);
+    }
+
+    // ── DISCOUNT PROGRESS INDICATOR ──
+    const indicatorFontSz = Math.max(11, Math.round(13 * scale))|0;
+    const barH = 20;
+    const barMargin = 16;
+    const barW = W - barMargin * 2;
+    let barY = 84;
+
+    // Score discount bar
+    const nextTier = getNextTier(score);
+    ctx.fillStyle = 'rgba(20,30,55,0.75)';
+    ctx.beginPath(); drawRR(ctx, barMargin, barY, barW, barH, 10); ctx.fill();
+
+    if (nextTier) {
+      const curTier = getCurrentTier(score);
+      const prevThreshold = curTier.minScore;
+      const needed = nextTier.minScore - score;
+      const progress = Math.min(1, Math.max(0, (score - prevThreshold) / (nextTier.minScore - prevThreshold)));
+      const fillW = Math.max(barH, barW * progress);
+      const barGrad = ctx.createLinearGradient(barMargin, 0, barMargin + fillW, 0);
+      barGrad.addColorStop(0, '#dabe82'); barGrad.addColorStop(1, '#c4a55a');
+      ctx.fillStyle = barGrad;
+      ctx.beginPath(); drawRR(ctx, barMargin, barY, fillW, barH, 10); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = `bold ${indicatorFontSz}px sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(`עוד ${needed} נקודות ל-${nextTier.pct}% הנחה!`, W/2, barY + barH/2);
+    } else {
+      const barGrad = ctx.createLinearGradient(barMargin, 0, barMargin + barW, 0);
+      barGrad.addColorStop(0, '#dabe82'); barGrad.addColorStop(1, '#c4a55a');
+      ctx.fillStyle = barGrad;
+      ctx.beginPath(); drawRR(ctx, barMargin, barY, barW, barH, 10); ctx.fill();
+      ctx.fillStyle = '#1a2744'; ctx.font = `bold ${indicatorFontSz}px sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('הנחה מקסימלית! 🏆', W/2, barY + barH/2);
+    }
+
+    // Free box time bar
+    barY += barH + 4;
+    ctx.fillStyle = 'rgba(20,30,55,0.75)';
+    ctx.beginPath(); drawRR(ctx, barMargin, barY, barW, barH, 10); ctx.fill();
+    const timeProgress = Math.min(1, gameTime / FREE_BOX_TIME);
+    const timeFillW = Math.max(barH, barW * timeProgress);
+    if (timeProgress >= 1) {
+      const tGrad = ctx.createLinearGradient(barMargin, 0, barMargin + barW, 0);
+      tGrad.addColorStop(0, '#25D366'); tGrad.addColorStop(1, '#128C7E');
+      ctx.fillStyle = tGrad;
+      ctx.beginPath(); drawRR(ctx, barMargin, barY, barW, barH, 10); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = `bold ${indicatorFontSz}px sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('מארז חינם מובטח! 🎁', W/2, barY + barH/2);
+    } else {
+      const tGrad = ctx.createLinearGradient(barMargin, 0, barMargin + timeFillW, 0);
+      tGrad.addColorStop(0, '#25D366'); tGrad.addColorStop(1, '#128C7E');
+      ctx.fillStyle = tGrad;
+      ctx.beginPath(); drawRR(ctx, barMargin, barY, timeFillW, barH, 10); ctx.fill();
+      const remainMin = Math.floor((FREE_BOX_TIME - gameTime) / 60);
+      const remainSec = Math.ceil((FREE_BOX_TIME - gameTime) % 60);
+      ctx.fillStyle = '#fff'; ctx.font = `bold ${indicatorFontSz}px sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(`עוד ${remainMin}:${remainSec<10?'0':''}${remainSec} למארז חינם! 🎁`, W/2, barY + barH/2);
+    }
+  }
+
+  requestAnimationFrame(render);
+}
+
+// ─── GAME FLOW ──────────────────────────────────────────────────
+function startGame() {
+  playerName = (document.getElementById('playerName').value || '').trim() || 'אנונימי';
+  score=0; lives=MAX_LIVES; level=1; combo=0; maxCombo=0;
+  gameTime=0; spawnTimer=0; shakeTimer=0; totalCaught=0; totalMissed=0;
+  boxX=W/2; targetBoxX=W/2;
+  // reset pools
+  for (let i=0;i<POOL_SIZE;i++) dessertPool[i].active=false;
+  for (let i=0;i<PARTICLE_POOL;i++) particlePool[i].active=false;
+  for (let i=0;i<FLOAT_POOL;i++) floatPool[i].active=false;
+  gameState='playing';
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('gameOverScreen').classList.add('hidden');
+}
+
+// ─── DISCOUNT TIERS (3 score levels + time bonus!) ──────────
+const DISCOUNT_TIERS = [
+  { minScore: 3500, pct: 15, code: 'SWEET15', label: 'חמש עשרה אחוז', title: 'תוצאה אלופה! הנחה בלעדית 🏆', subtitle: 'אלופים אמיתיים!' },
+  { minScore: 500,  pct: 10, code: 'SWEET10', label: 'עשר אחוז', title: 'יופי של תוצאה! קיבלתם הנחה ⭐', subtitle: 'מרשים מאוד!' },
+  { minScore: 0,    pct: 5,  code: 'SWEET5',  label: 'חמש אחוז', title: 'תודה ששיחקתם 🍪', subtitle: 'נסו שוב, אפשר יותר!' }
+];
+const FREE_BOX_TIME = 15 * 60; // 15 minutes in seconds
+function getCurrentTier(s) { return DISCOUNT_TIERS.find(t => s >= t.minScore); }
+function getNextTier(s) {
+  for (let i = DISCOUNT_TIERS.length - 1; i >= 0; i--) {
+    if (s < DISCOUNT_TIERS[i].minScore) return DISCOUNT_TIERS[i];
+  }
+  return null; // already at max
+}
+function isFreeBoxEarned() { return gameTime >= FREE_BOX_TIME; }
+
+function endGame() {
+  gameState='gameover';
+  document.getElementById('finalScore').textContent=score;
+  const sub=document.getElementById('goSubtitle');
+  const ct=document.getElementById('couponTitle');
+  const cc=document.getElementById('couponCode');
+  const cd=document.getElementById('couponDetail');
+
+  if (isFreeBoxEarned()) {
+    // 15+ minutes survived = free box!
+    sub.textContent = 'אגדה חיה!';
+    ct.textContent = 'שרדתם מעל 15 דקות! מארז במתנה 🎉🎁';
+    cc.textContent = 'SWEETFREE';
+    cd.textContent = 'מארז Sweet Box בחינם לחלוטין! הכניסו את קוד הקופון בקופה באתר או הציגו את צילום המסך בסניף';
+  } else {
+    const tier = getCurrentTier(score);
+    sub.textContent = tier.subtitle;
+    ct.textContent = tier.title;
+    cc.textContent = tier.code;
+    if (tier.pct >= 15) {
+      cd.textContent = `${tier.label} הנחה על ההזמנה הבאה! הכניסו את קוד הקופון בקופה באתר או הציגו את צילום המסך בסניף`;
+    } else {
+      cd.textContent = `${tier.label} הנחה על ההזמנה הבאה! הכניסו את קוד הקופון בקופה באתר או הציגו את צילום המסך בסניף`;
+    }
+  }
+  // save to leaderboard
+  saveToLeaderboard(playerName, score);
+  setTimeout(()=>{
+    document.getElementById('gameOverScreen').classList.remove('hidden');
+    renderLeaderboard('endLeaderboard', score);
+  },350);
+}
+
+function restartGame(){
+  document.getElementById('gameOverScreen').classList.add('hidden');
+  document.getElementById('startScreen').classList.remove('hidden');
+
+  gameState='menu';
+}
+
+// ─── INPUT ───────────────────────────────────────────────────────
+function handlePointer(e){
+  e.preventDefault();
+  const r=canvas.getBoundingClientRect();
+  targetBoxX=(e.touches&&e.touches.length>0?e.touches[0].clientX:e.clientX)-r.left;
+}
+canvas.addEventListener('touchstart',e=>{touchActive=true;handlePointer(e);},{passive:false});
+canvas.addEventListener('touchmove',e=>{if(touchActive)handlePointer(e);},{passive:false});
+canvas.addEventListener('touchend',e=>{e.preventDefault();touchActive=false;},{passive:false});
+canvas.addEventListener('touchcancel',()=>{touchActive=false;});
+canvas.addEventListener('mousedown',e=>{touchActive=true;handlePointer(e);});
+canvas.addEventListener('mousemove',e=>{if(touchActive)handlePointer(e);});
+canvas.addEventListener('mouseup',()=>{touchActive=false;});
+document.addEventListener('keydown',e=>{
+  if(gameState!=='playing')return;
+  if(e.key==='ArrowLeft')targetBoxX=boxX-50;
+  if(e.key==='ArrowRight')targetBoxX=boxX+50;
+});
+document.addEventListener('touchmove',e=>{e.preventDefault();},{passive:false});
+
+// ─── INIT ───────────────────────────────────────────────────────
+resizeCanvas();
+document.getElementById('playerName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); startGame(); }
+});
+requestAnimationFrame(render);
+</script>
+</body>
+</html>
